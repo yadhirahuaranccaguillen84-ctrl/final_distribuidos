@@ -18,7 +18,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 from api.routers import rentals, payments
 
@@ -37,12 +37,6 @@ app = FastAPI(
         "- 💳 Pagos realizados por los clientes\n"
     ),
     version="1.0.0",
-    contact={
-        "name": "UTP — CICLO 8 Sistemas Operativos",
-    },
-    license_info={
-        "name": "MIT",
-    },
 )
 
 # ─────────────────────────────────────────────
@@ -52,7 +46,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],        # solo lectura
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -65,16 +59,12 @@ app.include_router(payments.router)
 
 
 # ─────────────────────────────────────────────
-#  Endpoints de salud y raíz
+#  Endpoints de interfaz y salud
 # ─────────────────────────────────────────────
-@app.get("/", tags=["Estado"], summary="Raíz de la API")
+@app.get("/", tags=["UI"], summary="Dashboard Principal")
 def root():
-    return {
-        "message": "Sakila REST API activa ✔",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "version": "1.0.0",
-    }
+    """Sirve la interfaz gráfica construida en HTML."""
+    return FileResponse("cliente_ui.html")
 
 
 @app.get("/health", tags=["Estado"], summary="Estado del servidor")

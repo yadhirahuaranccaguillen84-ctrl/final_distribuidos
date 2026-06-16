@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sakila · Historial del Cliente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ══════════════════════════════════════════════
+       TOKENS DE DISEÑO
+    ══════════════════════════════════════════════ */
+        :root {
+            --navy: #1E3A8A;
+            --indigo: #3B82F6;
+            --teal: #0D9488;
+            --amber: #F59E0B;
+            --green: #10B981;
+            --red: #EF4444;
+
+            /* Modo oscuro (default) */
+            --bg: #0F172A;
+            --bg-card: #1E293B;
+            --bg-card2: #263348;
+            --border: #334155;
+            --text: #F1F5F9;
+            --text-muted: #94A3B8;
+            --text-head: #CBD5E1;
+            --row-alt: #1A2744;
+            --row-warn: #2D1F00;
+            --row-ok: #0D2517;
+            --row-error: #2D0F0F;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .45);
+        }
+
+        [data-theme="light"] {
+            --bg: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-card2: #EFF6FF;
+            --border: #E2E8F0;
+            --text: #0F172A;
+            --text-muted: #64748B;
+            --text-head: #1E293B;
+            --row-alt: #EFF6FF;
+            --row-warn: #FEF3C7;
+            --row-ok: #D1FAE5;
+            --row-error: #FEE2E2;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .08);
+        }
+
+        /* ══════════════════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Roboto', sans-serif;
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background .25s, color .25s;
+        }
+
+        /* ══════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════ */
+        header {
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 28px;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, .4);
+        }
+
+        .header-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            letter-spacing: -.3px;
+        }
+
+        .header-sub {
+            font-size: 13px;
+            color: #93C5FD;
+            flex: 1;
+        }
+
+        .api-badge {
+            background: #0E4477;
+            color: #A5F3FC;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .theme-btn {
+            background: var(--indigo);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .1s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .theme-btn:hover {
+            background: #2563EB;
+        }
+
+        .theme-btn:active {
+            transform: scale(.97);
+        }
+
+        /* ══════════════════════════════════════════════
+       SEARCH BAR
+    ══════════════════════════════════════════════ */
+        .search-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 28px;
+            height: 68px;
+            flex-wrap: wrap;
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-head);
+            white-space: nowrap;
+        }
+
+        .divider-v {
+            width: 2px;
+            height: 32px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .search-bar label {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        #customerIdInput {
+            width: 130px;
+            height: 40px;
+            padding: 0 14px;
+            border: 2px solid var(--teal);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        #customerIdInput:focus {
+            border-color: var(--indigo);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .25);
+        }
+
+        .search-btn {
+            height: 40px;
+            padding: 0 20px;
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s, transform .1s;
+        }
+
+        .search-btn:hover {
+            background: #0F766E;
+        }
+
+        .search-btn:active {
+            transform: scale(.97);
+        }
+
+        .search-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #customerInfo {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--indigo);
+            flex: 1;
+        }
+
+        #spinner {
+            font-size: 20px;
+            min-width: 28px;
+            text-align: center;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        #spinner.visible {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ══════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════ */
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 28px 80px;
+        }
+
+        /* ══════════════════════════════════════════════
+       STAT CARDS
+    ══════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 20px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: var(--shadow);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .25);
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* ══════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════ */
+        .tab-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-header {
+            background: var(--navy);
+            display: flex;
+            gap: 2px;
+            padding: 12px 16px 0;
+        }
+
+        .tab-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            background: transparent;
+            color: #93C5FD;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .2s, color .2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card);
+            color: var(--indigo);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px 20px 24px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ══════════════════════════════════════════════
+       FILTER BAR (dentro de cada tab)
+    ══════════════════════════════════════════════ */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-bar input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--amber);
+            cursor: pointer;
+        }
+
+        .tab-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .tab-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* ══════════════════════════════════════════════
+       TABLA
+    ══════════════════════════════════════════════ */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: var(--navy);
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 12px 14px;
+            text-align: left;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+
+        thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:nth-child(even) {
+            background: var(--row-alt);
+        }
+
+        tbody tr:nth-child(odd) {
+            background: transparent;
+        }
+
+        tbody tr:hover {
+            background: rgba(59, 130, 246, .12) !important;
+        }
+
+        tbody td {
+            padding: 11px 14px;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        tb.td-title {
+            white-space: normal;
+            min-width: 180px;
+        }
+
+        /* Estado badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .badge-ok {
+            background: rgba(16, 185, 129, .18);
+            color: var(--green);
+        }
+
+        .badge-warn {
+            background: rgba(245, 158, 11, .18);
+            color: var(--amber);
+        }
+
+        .badge-error {
+            background: rgba(239, 68, 68, .18);
+            color: var(--red);
+        }
+
+        /* Filas coloreadas por estado */
+        tr.row-warn {
+            background: var(--row-warn) !important;
+        }
+
+        tr.row-ok {
+            background: var(--row-ok) !important;
+        }
+
+        tr.row-error {
+            background: var(--row-error) !important;
+        }
+
+        /* ══════════════════════════════════════════════
+       ESTADO VACÍO
+    ══════════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+        }
+
+        /* ══════════════════════════════════════════════
+       STATUS BAR (footer fijo)
+    ══════════════════════════════════════════════ */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--navy);
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 11px;
+            z-index: 99;
+        }
+
+        #statusText {
+            color: #93C5FD;
+            transition: color .3s;
+        }
+
+        .status-bar-right {
+            color: #475569;
+        }
+
+        /* ══════════════════════════════════════════════
+       ALERTAS / TOAST
+    ══════════════════════════════════════════════ */
+        #toast {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            background: var(--red);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 380px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+            z-index: 999;
+            transform: translateX(120%);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            line-height: 1.5;
+        }
+
+        #toast.show {
+            transform: translateX(0);
+        }
+
+        /* ══════════════════════════════════════════════
+       SKELETON LOADER
+    ══════════════════════════════════════════════ */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, var(--bg-card2) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        /* ══════════════════════════════════════════════
+       SCROLLBAR CUSTOM
+    ══════════════════════════════════════════════ */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A6484;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════════ HEADER ══════════════ -->
+    <header>
+        <span class="header-logo">🎬 SAKILA</span>
+        <span class="header-sub">Sistema de Gestión de Alquiler de Películas</span>
+        <span class="api-badge" id="apiBadge">API: cargando…</span>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀ Modo Claro</button>
+    </header>
+
+    <!-- ══════════════ SEARCH BAR ══════════════ -->
+    <div class="search-bar">
+        <span class="search-title">Historial del Cliente</span>
+        <div class="divider-v"></div>
+        <label for="customerIdInput">ID Cliente:</label>
+        <input type="number" id="customerIdInput" placeholder="Ej: 130" min="1" />
+        <button class="search-btn" id="searchBtn" onclick="onSearch()">
+            <span>🔍</span> Buscar
+        </button>
+        <span id="spinner">⟳</span>
+        <span id="customerInfo"></span>
+    </div>
+
+    <!-- ══════════════ MAIN ══════════════ -->
+    <div class="main">
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🎬</div>
+                <div class="stat-value" id="cardActive" style="color:var(--indigo)">—</div>
+                <div class="stat-label">Rentas Activas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-value" id="cardOverdue" style="color:var(--amber)">—</div>
+                <div class="stat-label">Con Retraso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="cardReturned" style="color:var(--green)">—</div>
+                <div class="stat-label">Devueltas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💳</div>
+                <div class="stat-value" id="cardPaid" style="color:var(--teal)">$—</div>
+                <div class="stat-label">Total Pagado</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-wrapper">
+            <div class="tab-header">
+                <button class="tab-btn active" data-tab="active" onclick="switchTab('active')">🎬 Rentas
+                    Activas</button>
+                <button class="tab-btn" data-tab="returned" onclick="switchTab('returned')">✅ Películas
+                    Devueltas</button>
+                <button class="tab-btn" data-tab="payments" onclick="switchTab('payments')">💳 Pagos</button>
+            </div>
+
+            <!-- ── Tab: Rentas Activas ── -->
+            <div class="tab-content active" id="tab-active">
+                <div class="filter-bar">
+                    <label>
+                        <input type="checkbox" id="chkOverdue" onchange="reloadActive()" />
+                        Solo con retraso
+                    </label>
+                    <span class="tab-meta" id="metaActive"></span>
+                </div>
+                <div class="table-container" id="tableActiveWrap">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎬</div>
+                        <p>Busca un cliente para ver sus rentas activas</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Películas Devueltas ── -->
+            <div class="tab-content" id="tab-returned">
+                <div class="filter-bar">
+                    <label>
+                        <input type="checkbox" id="chkLate" onchange="reloadReturned()"
+                            style="accent-color:var(--red)" />
+                        Solo devoluciones tardías
+                    </label>
+                    <span class="tab-meta" id="metaReturned"></span>
+                </div>
+                <div class="table-container" id="tableReturnedWrap">
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <p>Busca un cliente para ver sus devoluciones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Pagos ── -->
+            <div class="tab-content" id="tab-payments">
+                <div class="filter-bar">
+                    <span class="tab-meta" id="metaPayments"></span>
+                    <span class="tab-total" id="metaTotal"></span>
+                </div>
+                <div class="table-container" id="tablePaymentsWrap">
+                    <div class="empty-state">
+                        <div class="empty-icon">💳</div>
+                        <p>Busca un cliente para ver sus pagos</p>
+                    </div>
+                </div>
+            </div>
+        </div><!-- .tab-wrapper -->
+    </div><!-- .main -->
+
+    <!-- Toast error -->
+    <div id="toast"></div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+        <span id="statusText">Listo — ingresa un ID de cliente para comenzar</span>
+        <span class="status-bar-right">Sakila API • v1.0.0 • UTP CICLO 8</span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+    <script>
+        /* ── Configuración de la API ─────────────────── */
+        // Detecta automáticamente si se está sirviendo desde la misma API o usa localhost por defecto
+        const params = new URLSearchParams(window.location.search);
+        const defaultApi = window.location.origin.includes('localhost') || window.location.protocol === 'file:'
+            ? window.location.origin
+            : 'http://localhost:8000';
+
+        const API_BASE = (params.get('api') || (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin)).replace(/\/$/, '');
+        document.getElementById('apiBadge').textContent = `API: ${API_BASE}`;
+
+        /* ── Estado global ────────────────────────────── */
+        let currentCustomerId = null;
+        let allActive = [];
+        let allReturned = [];
+        let allPayments = [];
+
+        /* ── Tema ─────────────────────────────────────── */
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.dataset.theme === 'dark';
+            html.dataset.theme = isDark ? 'light' : 'dark';
+            document.getElementById('themeBtn').textContent = isDark ? '🌙 Modo Oscuro' : '☀ Modo Claro';
+        }
+
+        /* ── Tabs ─────────────────────────────────────── */
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+        }
+
+        /* ── Status / Toast ───────────────────────────── */
+        function setStatus(text, color = '#93C5FD') {
+            const el = document.getElementById('statusText');
+            el.textContent = text;
+            el.style.color = color;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 5000);
+        }
+
+        /* ── Spinner ──────────────────────────────────── */
+        function setLoading(on) {
+            const sp = document.getElementById('spinner');
+            const btn = document.getElementById('searchBtn');
+            sp.classList.toggle('visible', on);
+            btn.disabled = on;
+            btn.innerHTML = on ? '<span>⏳</span> Buscando…' : '<span>🔍</span> Buscar';
+        }
+
+        /* ── Fetch helper ─────────────────────────────── */
+        async function apiFetch(path, queryParams = {}) {
+            const url = new URL(API_BASE + path);
+            Object.entries(queryParams).forEach(([k, v]) => url.searchParams.set(k, v));
+            const res = await fetch(url.toString());
+            if (res.status === 404) return [];
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        /* ── Búsqueda principal ───────────────────────── */
+        async function onSearch() {
+            const raw = document.getElementById('customerIdInput').value.trim();
+            if (!raw) { showToast('Ingresa un ID de cliente.'); return; }
+            const cid = parseInt(raw, 10);
+            if (isNaN(cid) || cid < 1) { showToast('El ID de cliente debe ser un número entero positivo.'); return; }
+
+            currentCustomerId = cid;
+            setLoading(true);
+            setStatus(`Consultando cliente #${cid}…`, 'var(--amber)');
+            document.getElementById('customerInfo').textContent = '';
+
+            // Resetear tarjetas
+            ['cardActive', 'cardOverdue', 'cardReturned', 'cardPaid'].forEach(id => {
+                document.getElementById(id).textContent = '…';
+            });
+
+            try {
+                const [active, returned, payments] = await Promise.all([
+                    apiFetch('/rentals/active', { customer_id: cid, limit: 500 }),
+                    apiFetch('/rentals/returned', { customer_id: cid, limit: 500 }),
+                    apiFetch(`/payments/customer/${cid}`, { limit: 500 }).catch(() => []),
+                ]);
+
+                allActive = active;
+                allReturned = returned;
+                allPayments = payments;
+
+                updateAll(cid, active, returned, payments);
+            } catch (err) {
+                setLoading(false);
+                setStatus('Error al conectar con la API', 'var(--red)');
+                showToast(`No se pudo conectar a la API.\nURL: ${API_BASE}\n\n${err.message}`);
+            }
+        }
+
+        // Enter key support
+        document.getElementById('customerIdInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') onSearch();
+        });
+
+        /* ── Actualizar toda la UI ────────────────────── */
+        function updateAll(cid, active, returned, payments) {
+            // Nombre del cliente
+            const sample = [...active, ...returned, ...payments][0] || {};
+            const name = sample.customer_name || `Cliente #${cid}`;
+            const email = sample.customer_email || '';
+            document.getElementById('customerInfo').textContent = `👤  ${name}   ${email}`;
+
+            // Tarjetas
+            const totalOverdue = active.filter(r => r.overdue).length;
+            const totalPaid = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+            document.getElementById('cardActive').textContent = active.length;
+            document.getElementById('cardOverdue').textContent = totalOverdue;
+            document.getElementById('cardReturned').textContent = returned.length;
+            document.getElementById('cardPaid').textContent = `$${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Tablas
+            renderActiveTable(active);
+            renderReturnedTable(returned);
+            renderPaymentsTable(payments);
+
+            setLoading(false);
+            setStatus(`Datos cargados para ${name} · ${active.length} activas · ${returned.length} devueltas · ${payments.length} pagos`, 'var(--green)');
+        }
+
+        /* ── Tabla: Rentas Activas ────────────────────── */
+        function renderActiveTable(rows) {
+            const filtered = document.getElementById('chkOverdue').checked
+                ? rows.filter(r => r.overdue) : rows;
+
+            const overdue = rows.filter(r => r.overdue).length;
+            document.getElementById('metaActive').textContent =
+                `${rows.length} renta(s) activa(s)  ·  ${overdue} vencida(s)`;
+
+            if (!filtered.length) {
+                document.getElementById('tableActiveWrap').innerHTML =
+                    emptyState('🎬', 'No hay rentas activas con ese filtro');
+                return;
+            }
+
+            const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID Renta</th>
+          <th>Fecha Renta</th>
+          <th>Película</th>
+          <th>Tienda</th>
+          <th>Días Rentado</th>
+          <th>Límite Días</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(r => {
+                const overdue = r.overdue;
+                const rowClass = overdue ? 'row-warn' : 'row-ok';
+                const badge = overdue
+                    ? `<span class="badge badge-warn">⚠ VENCIDA</span>`
+                    : `<span class="badge badge-ok">✔ Al día</span>`;
+                return `<tr class="${rowClass}">
+            <td>${r.rental_id}</td>
+            <td>${fmtDate(r.rental_date)}</td>
+            <td class="td-title">${r.film_title}</td>
+            <td style="text-align:center">${r.store_id}</td>
+            <td style="text-align:center;font-weight:600;color:${overdue ? 'var(--amber)' : 'var(--green)'}">${r.days_rented}</td>
+            <td style="text-align:center">${r.rental_duration}</td>
+            <td>${badge}</td>
+          </tr>`;
+            }).join('')}
+      </tbody>
+    </table>`;
+            document.getElementById('tableActiveWrap').innerHTML = html;
+        }
+
+        function reloadActive() { renderActiveTable(allActive); }
+
+        /* ── Tabla: Devueltas ─────────────────────────── */
+        function renderReturnedTable(rows) {
+            const filtered = document.getElementById('chkLate').checked
+                ? rows.filter(r => !r.on_time) : rows;
+
+            const late = rows.filter(r => !r.on_time).length;
+            document.getElementById('metaReturned').textContent =
+                `${rows.length} devolución(es)  ·  ${late} tardía(s)`;
+
+            if (!filtered.length) {
+                document.getElementById('tableReturnedWrap').innerHTML =
+                    emptyState('✅', 'No hay devoluciones con ese filtro');
+                return;
+            }
+
+            const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID Renta</th>
+          <th>Fecha Renta</th>
+          <th>Fecha Devolución</th>
+          <th>Película</th>
+          <th>Tienda</th>
+          <th>Días</th>
+          <th>Puntualidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(r => {
+                const ok = r.on_time;
+                const rowClass = ok ? 'row-ok' : 'row-error';
+                const badge = ok
+                    ? `<span class="badge badge-ok">✔ A tiempo</span>`
+                    : `<span class="badge badge-error">✘ Tarde</span>`;
+                return `<tr class="${rowClass}">
+            <td>${r.rental_id}</td>
+            <td>${fmtDate(r.rental_date)}</td>
+            <td>${fmtDate(r.return_date)}</td>
+            <td class="td-title">${r.film_title}</td>
+            <td style="text-align:center">${r.store_id}</td>
+            <td style="text-align:center;font-weight:600">${r.rental_duration_days}</td>
+            <td>${badge}</td>
+          </tr>`;
+            }).join('')}
+      </tbody>
+    </table>`;
+            document.getElementById('tableReturnedWrap').innerHTML = html;
+        }
+
+        function reloadReturned() { renderReturnedTable(allReturned); }
+
+        /* ── Tabla: Pagos ─────────────────────────────── */
+        function renderPaymentsTable(rows) {
+            const total = rows.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+            document.getElementById('metaPayments').textContent = `${rows.length} pago(s)`;
+            document.getElementById('metaTotal').textContent =
+                rows.length ? `Total:  $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+
+            if (!rows.length) {
+                document.getElementById('tablePaymentsWrap').innerHTML =
+                    emptyState('💳', 'No se encontraron pagos para este cliente');
+                return;
+            }
+
+            const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID Pago</th>
+          <th>Fecha Pago</th>
+          <th>ID Renta</th>
+          <th>Monto</th>
+          <th>Empleado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((p, i) => {
+                const amount = parseFloat(p.amount || 0);
+                return `<tr>
+            <td>${p.payment_id}</td>
+            <td>${fmtDate(p.payment_date)}</td>
+            <td>${p.rental_id}</td>
+            <td style="font-weight:700;color:var(--green)">$${amount.toFixed(2)}</td>
+            <td style="text-align:center">${p.staff_id}</td>
+          </tr>`;
+            }).join('')}
+      </tbody>
+    </table>`;
+            document.getElementById('tablePaymentsWrap').innerHTML = html;
+        }
+
+        /* ── Helpers ──────────────────────────────────── */
+        function fmtDate(raw) {
+            if (!raw) return '—';
+            return String(raw).slice(0, 16).replace('T', '  ');
+        }
+
+        function emptyState(icon, msg) {
+            return `<div class="empty-state">
+      <div class="empty-icon">${icon}</div>
+      <p>${msg}</p>
+    </div>`;
+        }
+    </script>
+</body>
+
+</html>

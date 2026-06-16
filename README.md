@@ -1,7 +1,7 @@
-# 🎬 Sakila REST API
+# 🎬 Sakila — API REST & Dashboard de Cliente
 
-> API REST construida con **FastAPI + Python** sobre la base de datos **Sakila** alojada en **Supabase (PostgreSQL)**.  
-> Proporciona endpoints de solo lectura para consultar rentas activas, devoluciones y pagos de una tienda de películas.
+> Sistema completo de gestión de alquiler de películas construido con **FastAPI + Python** y **CustomTkinter**, sobre la base de datos **Sakila** alojada en **Supabase (PostgreSQL)**.  
+> Incluye API REST de solo lectura y una interfaz gráfica de escritorio para consultar rentas activas, devoluciones y pagos.
 
 ---
 
@@ -9,7 +9,8 @@
 
 - [Requisitos previos](#requisitos-previos)
 - [Instalación y configuración](#instalación-y-configuración)
-- [Ejecución del servidor](#ejecución-del-servidor)
+- [Ejecución del servidor API](#ejecución-del-servidor-api)
+- [Interfaz gráfica — Dashboard del Cliente](#interfaz-gráfica--dashboard-del-cliente)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Endpoints disponibles](#endpoints-disponibles)
   - [Estado del servidor](#estado-del-servidor)
@@ -55,7 +56,7 @@ El archivo `.env` ya está configurado con las credenciales de Supabase. Si nece
 
 ---
 
-## Ejecución del servidor
+## Ejecución del servidor API
 
 ```bash
 # Opción A — arranque directo (lee API_HOST y API_PORT del .env)
@@ -69,12 +70,46 @@ El servidor quedará disponible en **`http://localhost:8000`**.
 
 ---
 
+## Interfaz Gráfica — Dashboard Web
+
+La interfaz ha sido migrada a una **Web UI moderna** construida con HTML5, CSS3 y JavaScript. No requiere instalación de librerías gráficas pesadas y es servida directamente por el servidor FastAPI.
+
+### Características de la Web UI
+
+- 📱 **Diseño Responsivo** — Se adapta a cualquier tamaño de pantalla.
+- 🌙 **Modo Oscuro Integrado** — Conmutación fluida entre temas.
+- 📊 **Visualización de Datos Reales** — Conexión directa a los endpoints de la API.
+- 🚦 **Indicadores de Estado** — Badges de colores para rentas vencidas (Ámbar) y devoluciones tardías (Rojo).
+- ⚡ **Sin Configuración** — Solo necesitas abrir la URL del servidor.
+
+### Cómo acceder
+
+1. Inicia el servidor (ver sección siguiente).
+2. Abre tu navegador en [http://localhost:8000](http://localhost:8000).
+3. Alternativamente, puedes ejecutar el comando `python cliente_ui.py` para abrirla automáticamente.
+
+---
+
+## Ejecución del servidor API
+
+```bash
+# Ejecutar el servidor (incluye la API y la Interfaz Web)
+python main.py
+```
+
+El Dashboard y la API estarán disponibles en:
+- **Dashboard:** [http://localhost:8000](http://localhost:8000)
+- **Documentación API:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
 ## Estructura del proyecto
 
 ```
 FINAL_SISTEMAS_OPERATIVOS/
-├── .env                        # Variables de entorno (credenciales DB)
-├── main.py                     # Punto de entrada de la aplicación
+├── .env                        # Variables de entorno (credenciales DB + API_ENDPOINT)
+├── main.py                     # Punto de entrada del servidor API
+├── cliente_ui.py               # Interfaz gráfica de escritorio (CustomTkinter)
 ├── requirements.txt            # Dependencias Python
 ├── README.md                   # Este archivo
 ├── SQL/
@@ -429,6 +464,11 @@ SUPABASE_DB_PASSWORD=<contraseña>
 API_HOST=0.0.0.0
 API_PORT=8000
 API_DEBUG=false   # true activa recarga automática (solo desarrollo)
+
+# URL base de la API (usado por la interfaz gráfica cliente_ui.py)
+API_ENDPOINT=http://localhost:8000
+# Si la API está desplegada en otro servidor:
+# API_ENDPOINT=https://tu-api.ejemplo.com
 ```
 
 ---
