@@ -644,6 +644,57 @@
     <!-- ══════════════ MAIN ══════════════ -->
     <div class="main">
 
+        <!-- Detalle de Cliente (Ficha de Cliente) -->
+        <div id="customerCardContainer" style="display: none; margin-bottom: 24px;">
+            <div
+                style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 20px; box-shadow: var(--shadow);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 700; color: var(--indigo); margin-bottom: 4px;"
+                            id="clientName">—</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);" id="clientEmail">—</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <span class="badge" id="clientStatusBadge">ACTIVO</span>
+                        <span class="badge" id="clientStoreBadge"
+                            style="background: rgba(59, 130, 246, .18); color: var(--indigo);">TIENDA —</span>
+                    </div>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div>
+                        <span
+                            style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 2px;">DNI
+                            / Cédula</span>
+                        <strong id="clientDni">—</strong>
+                    </div>
+                    <div>
+                        <span
+                            style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 2px;">Teléfono</span>
+                        <strong id="clientPhone">—</strong>
+                    </div>
+                    <div>
+                        <span
+                            style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 2px;">Dirección</span>
+                        <strong id="clientAddress">—</strong>
+                    </div>
+                    <div>
+                        <span
+                            style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 2px;">Ciudad
+                            / País</span>
+                        <strong id="clientLocation">—</strong>
+                    </div>
+                    <div>
+                        <span
+                            style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 2px;">Fecha
+                            de Registro</span>
+                        <span id="clientRegDate" style="font-weight: 600;">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Stat Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -676,6 +727,8 @@
                 <button class="tab-btn" data-tab="returned" onclick="switchTab('returned')">✅ Películas
                     Devueltas</button>
                 <button class="tab-btn" data-tab="payments" onclick="switchTab('payments')">💳 Pagos</button>
+                <button class="tab-btn" data-tab="clientes" onclick="switchTab('clientes')" id="btnTabClientes">👥
+                    Directorio de Clientes</button>
             </div>
 
             <!-- ── Tab: Rentas Activas ── -->
@@ -726,6 +779,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ── Tab: Clientes (API Externa) ── -->
+            <div class="tab-content" id="tab-clientes">
+                <div class="filter-bar">
+                    <span class="tab-meta" id="metaClientes">Cargando directorio de clientes...</span>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+                        <button class="theme-btn" id="btnPrevClients" onclick="changeClientsPage(-1)"
+                            style="padding: 6px 12px; font-size: 12px;">◀ Anterior</button>
+                        <span id="txtClientsPage"
+                            style="font-weight: 600; font-size: 12px; margin: 0 4px; color: var(--text-head)">Pág. 1 /
+                            1</span>
+                        <button class="theme-btn" id="btnNextClients" onclick="changeClientsPage(1)"
+                            style="padding: 6px 12px; font-size: 12px;">Siguiente ▶</button>
+                    </div>
+                </div>
+                <div class="table-container" id="tableClientesWrap">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <p>Cargando directorio de clientes...</p>
+                    </div>
+                </div>
+            </div>
+
         </div><!-- .tab-wrapper -->
     </div><!-- .main -->
 
@@ -758,6 +834,11 @@
         let allReturned = [];
         let allPayments = [];
 
+        /* ── Estado del Directorio de Clientes ────────── */
+        let clientsPage = 1;
+        let clientsPerPage = 10;
+        let totalClientsPages = 1;
+
         /* ── Tema ─────────────────────────────────────── */
         function toggleTheme() {
             const html = document.documentElement;
@@ -770,6 +851,9 @@
         function switchTab(name) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+            if (name === 'clientes') {
+                loadClientsDirectory();
+            }
         }
 
         /* ── Status / Toast ───────────────────────────── */
@@ -817,13 +901,16 @@
             setStatus(`Consultando cliente #${cid}…`, 'var(--amber)');
             document.getElementById('customerInfo').textContent = '';
 
-            // Resetear tarjetas
+            // Resetear tarjetas & ocultar ficha anterior
             ['cardActive', 'cardOverdue', 'cardReturned', 'cardPaid'].forEach(id => {
                 document.getElementById(id).textContent = '…';
             });
+            document.getElementById('customerCardContainer').style.display = 'none';
 
             try {
-                const [active, returned, payments] = await Promise.all([
+                // Hacer peticiones en paralelo incluyendo la API externa de clientes de nuestro backend
+                const [clientDetail, active, returned, payments] = await Promise.all([
+                    apiFetch(`/clientes/${cid}`).catch(() => null),
                     apiFetch('/rentals/active', { customer_id: cid, limit: 500 }),
                     apiFetch('/rentals/returned', { customer_id: cid, limit: 500 }),
                     apiFetch(`/payments/customer/${cid}`, { limit: 500 }).catch(() => []),
@@ -833,7 +920,7 @@
                 allReturned = returned;
                 allPayments = payments;
 
-                updateAll(cid, active, returned, payments);
+                updateAll(cid, active, returned, payments, clientDetail);
             } catch (err) {
                 setLoading(false);
                 setStatus('Error al conectar con la API', 'var(--red)');
@@ -847,11 +934,39 @@
         });
 
         /* ── Actualizar toda la UI ────────────────────── */
-        function updateAll(cid, active, returned, payments) {
+        function updateAll(cid, active, returned, payments, clientDetail) {
             // Nombre del cliente
-            const sample = [...active, ...returned, ...payments][0] || {};
-            const name = sample.customer_name || `Cliente #${cid}`;
-            const email = sample.customer_email || '';
+            let name = `Cliente #${cid}`;
+            let email = '';
+
+            if (clientDetail && !Array.isArray(clientDetail) && clientDetail.customer_id) {
+                name = `${clientDetail.nombre} ${clientDetail.apellido}`;
+                email = clientDetail.email || '';
+
+                // Llenar Ficha de cliente
+                document.getElementById('clientName').textContent = `${clientDetail.nombre} ${clientDetail.apellido}`;
+                document.getElementById('clientEmail').textContent = email;
+
+                const statusEl = document.getElementById('clientStatusBadge');
+                statusEl.textContent = (clientDetail.estado || 'activo').toUpperCase();
+                statusEl.className = 'badge ' + (clientDetail.estado === 'activo' ? 'badge-ok' : 'badge-error');
+
+                document.getElementById('clientStoreBadge').textContent = `TIENDA ${clientDetail.store_id || 1}`;
+                document.getElementById('clientDni').textContent = clientDetail.dni || '—';
+                document.getElementById('clientPhone').textContent = clientDetail.telefono || '—';
+                document.getElementById('clientAddress').textContent = clientDetail.address || '—';
+                document.getElementById('clientLocation').textContent = [clientDetail.city, clientDetail.country].filter(Boolean).join(', ') || '—';
+                document.getElementById('clientRegDate').textContent = clientDetail.fecha_registro || '—';
+
+                document.getElementById('customerCardContainer').style.display = 'block';
+            } else {
+                // Fallback a la Base de Datos local
+                const sample = [...active, ...returned, ...payments][0] || {};
+                name = sample.customer_name || `Cliente #${cid}`;
+                email = sample.customer_email || '';
+                document.getElementById('customerCardContainer').style.display = 'none';
+            }
+
             document.getElementById('customerInfo').textContent = `👤  ${name}   ${email}`;
 
             // Tarjetas
@@ -868,7 +983,96 @@
             renderPaymentsTable(payments);
 
             setLoading(false);
-            setStatus(`Datos cargados para ${name} · ${active.length} activas · ${returned.length} devueltas · ${payments.length} pagos`, 'var(--green)');
+            setStatus(`Datos cargados para ${name} · ${active.length} rentas activas · ${returned.length} devueltas · ${payments.length} pagos`, 'var(--green)');
+        }
+
+        /* ── Directorio de Clientes ────────────────── */
+        async function loadClientsDirectory() {
+            document.getElementById('tableClientesWrap').innerHTML = `
+                <div class="empty-state">
+                    <div class="spinner-loader" style="font-size: 24px; animation: spin 1s linear infinite; display: inline-block;">⟳</div>
+                    <p style="margin-top: 10px;">Cargando directorio de clientes desde la API externa...</p>
+                </div>
+            `;
+            try {
+                const data = await apiFetch('/clientes', { pagina: clientsPage, por_pagina: clientsPerPage });
+                if (data && data.items) {
+                    renderClientsTable(data.items);
+                    totalClientsPages = data.total_paginas || 1;
+                    document.getElementById('txtClientsPage').textContent = `Pág. ${data.pagina} / ${totalClientsPages}`;
+                    document.getElementById('metaClientes').textContent = `${data.total} clientes registrados`;
+
+                    document.getElementById('btnPrevClients').disabled = (data.pagina <= 1);
+                    document.getElementById('btnNextClients').disabled = (data.pagina >= totalClientsPages);
+                } else {
+                    document.getElementById('tableClientesWrap').innerHTML = emptyState('👥', 'El directorio retornó un formato inesperado.');
+                }
+            } catch (err) {
+                console.error("Error al cargar clientes:", err);
+                document.getElementById('tableClientesWrap').innerHTML = emptyState('👥', `No se pudo conectar a la API de clientes: ${err.message}`);
+            }
+        }
+
+        function renderClientsTable(items) {
+            if (!items.length) {
+                document.getElementById('tableClientesWrap').innerHTML = emptyState('👥', 'No se encontraron clientes.');
+                return;
+            }
+
+            const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>DNI / Email</th>
+          <th>Teléfono</th>
+          <th>Ubicación</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(c => {
+                const statusClass = c.estado === 'activo' ? 'badge-ok' : 'badge-error';
+                const location = [c.city, c.country].filter(Boolean).join(', ');
+                return `<tr>
+            <td style="font-weight:700">${c.customer_id}</td>
+            <td style="font-weight:600; color:var(--indigo)">${c.nombre} ${c.apellido}</td>
+            <td>
+              <div style="font-weight:600">${c.dni || '—'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${c.email}</div>
+            </td>
+            <td>${c.telefono || '—'}</td>
+            <td>
+              <div>${c.address || '—'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${location || '—'}</div>
+            </td>
+            <td><span class="badge ${statusClass}">${(c.estado || 'activo').toUpperCase()}</span></td>
+            <td>
+              <button class="theme-btn" onclick="selectClientAndSearch(${c.customer_id})" style="padding: 6px 12px; font-size: 11px; background: var(--teal);">
+                📂 Cargar Ficha
+              </button>
+            </td>
+          </tr>`;
+            }).join('')}
+      </tbody>
+    </table>`;
+            document.getElementById('tableClientesWrap').innerHTML = html;
+        }
+
+        function changeClientsPage(delta) {
+            const newPage = clientsPage + delta;
+            if (newPage >= 1 && newPage <= totalClientsPages) {
+                clientsPage = newPage;
+                loadClientsDirectory();
+            }
+        }
+
+        function selectClientAndSearch(id) {
+            document.getElementById('customerIdInput').value = id;
+            switchTab('active');
+            onSearch();
         }
 
         /* ── Tabla: Rentas Activas ────────────────────── */
@@ -1027,6 +1231,11 @@
       <p>${msg}</p>
     </div>`;
         }
+
+        // Cargar directorio al iniciar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            loadClientsDirectory();
+        });
     </script>
 </body>
 

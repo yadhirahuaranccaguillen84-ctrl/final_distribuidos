@@ -82,7 +82,34 @@ class CustomerPaymentSummary(BaseModel):
 
 
 # ─────────────────────────────────────────────────
+#  Modelos para API externa de Clientes
+# ─────────────────────────────────────────────────
+class Cliente(BaseModel):
+    customer_id: int
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    codigo_postal: Optional[str] = None
+    telefono: Optional[str] = None
+    dni: Optional[str] = None
+    store_id: Optional[int] = None
+    estado: Optional[str] = None
+    fecha_registro: Optional[str] = None
+
+class ClientesResponse(BaseModel):
+    total: int
+    pagina: int
+    por_pagina: int
+    total_paginas: int
+    items: list[Cliente]
+
+
+# ─────────────────────────────────────────────────
 #  Respuesta genérica de error
 # ─────────────────────────────────────────────────
 class ErrorResponse(BaseModel):
     detail: str
+

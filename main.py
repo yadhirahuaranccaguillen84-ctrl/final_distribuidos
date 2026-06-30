@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
-from api.routers import rentals, payments
+from api.routers import rentals, payments, clientes
 
 
 # ─────────────────────────────────────────────
@@ -56,6 +56,7 @@ app.add_middleware(
 # ─────────────────────────────────────────────
 app.include_router(rentals.router)
 app.include_router(payments.router)
+app.include_router(clientes.router)
 
 
 # ─────────────────────────────────────────────
